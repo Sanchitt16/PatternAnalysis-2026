@@ -1,0 +1,12 @@
+# never commit data, caches or model weights (spec section 4.1)
+*.pt
+*.pth
+*.npz
+*.nii
+*.nii.gz
+*.tar.gz
+data/
+__pycache__/
+*.pyc
+# training logs/checkpoints live in runs/; only curves + metrics are copied into figures/ for the README
+runs/
