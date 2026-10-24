@@ -15,6 +15,7 @@ Outputs (in --out, default figures/):
     failures_<model>.png   the k worst prostate slices: input, GT, prediction, error overlay
                            (red = false positive, blue = false negative) for the autopsy
     curves_<model>.png     training curves copied from runs/<model>/
+    size_dice.png          prostate Dice binned by the slice's true prostate area (px)
     position_dice.png      prostate Dice on base/apex (boundary) vs mid-gland slices
     comparison.json        side-by-side metrics for README tables
 """
@@ -149,6 +150,77 @@ def plot_position(metrics_by_model, path):
     plt.close(fig)
 
 
+SIZE_BINS = [(1, 50), (50, 150), (150, 400), (400, 10 ** 6)]
+
+
+def size_breakdown(ds, res):
+    """Pooled prostate Dice and miss count, binned by the slice's ground-truth prostate area (px)."""
+    area = (ds.masks == PROSTATE).reshape(len(ds), -1).sum(1)
+    d = per_slice_prostate_dice(res)
+    rows = []
+    for lo, hi in SIZE_BINS:
+        m = (area >= lo) & (area < hi)
+        inter, ps, gs = (res[k][m, PROSTATE].sum() for k in ("inter", "psum", "gsum"))
+        rows.append({"bin": f"{lo}-{hi - 1}" if hi < 10 ** 6 else f">={lo}", "slices": int(m.sum()),
+                     "pooled_dice": round(float(2 * inter / max(ps + gs, 1)), 4),
+                     "missed_slices": int((d[m] < 0.1).sum())})
+    return rows
+
+
+def error_breakdown(ds, res):
+    """Where prostate errors go: true label under false-positive prostate pixels, and the label
+    predicted on missed prostate pixels. Leakage into rectum (4) or bladder (3) is the clinically
+    hazardous case (over-irradiating an organ at risk)."""
+    gt, pr = ds.masks, res["preds"]
+    fp = gt[(pr == PROSTATE) & (gt != PROSTATE)]
+    fn = pr[(gt == PROSTATE) & (pr != PROSTATE)]
+    count = lambda a: {CLASS_NAMES[int(k)]: int(v) for k, v in zip(*np.unique(a, return_counts=True))}
+    return {"false_positive_pixels_on": count(fp), "missed_pixels_predicted_as": count(fn)}
+
+
+def extent_breakdown(ds, res):
+    """Per scan, compare the slice range that contains prostate in the ground truth vs prediction.
+
+    Returns one row per (patient, week): true and predicted first/last prostate slice and the
+    signed end errors in slices. start_err > 0 / end_err < 0 = gland ends missed (under-contour);
+    start_err < 0 / end_err > 0 = predicted gland runs past the true end (over-contour into OARs).
+    """
+    rows = []
+    for p, w in sorted({(int(a), int(b)) for a, b, _ in ds.keys}):
+        m = (ds.keys[:, 0] == p) & (ds.keys[:, 1] == w)
+        sl = ds.keys[m, 2]
+
+        def span(labels):
+            s = sl[(labels[m] == PROSTATE).reshape(m.sum(), -1).any(1)]
+            return (int(s.min()), int(s.max())) if len(s) else (None, None)
+
+        g, q = span(ds.masks), span(res["preds"])
+        row = {"patient": p, "week": w, "true": g, "pred": q}
+        if None not in g + q:
+            row.update(start_err=q[0] - g[0], end_err=q[1] - g[1])
+        rows.append(row)
+    return rows
+
+
+def plot_size(rows_by_model, path):
+    names = list(rows_by_model)
+    bins = [r["bin"] for r in rows_by_model[names[0]]]
+    x = np.arange(len(bins))
+    wdt = 0.8 / len(names)
+    fig, ax = plt.subplots(figsize=(6, 3.6))
+    for j, n in enumerate(names):
+        bars = ax.bar(x + j * wdt - 0.4 + wdt / 2, [r["pooled_dice"] for r in rows_by_model[n]], wdt, label=n)
+        ax.bar_label(bars, fmt="%.2f", fontsize=8)
+    counts = [r["slices"] for r in rows_by_model[names[0]]]
+    ax.set_xticks(x, [f"{b} px\n({c} slices)" for b, c in zip(bins, counts)], fontsize=8)
+    ax.axhline(0.75, ls="--", c="grey", lw=1)
+    ax.set(xlabel="ground-truth prostate area on the slice", ylabel="pooled prostate Dice (test)", ylim=(0, 1))
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(path, dpi=120)
+    plt.close(fig)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-root", required=True)
@@ -175,9 +247,19 @@ def main():
             shutil.copy(curves, os.path.join(args.out, f"curves_{kind}.png"))
         metrics[name]["worst_slices"] = plot_failures(
             ds, results[name], positions, name, os.path.join(args.out, f"failures_{kind}.png"))
+        metrics[name]["dice_by_prostate_area"] = size_breakdown(ds, results[name])
+        metrics[name]["prostate_errors"] = error_breakdown(ds, results[name])
+        ext = metrics[name]["gland_extent"] = extent_breakdown(ds, results[name])
+        over = sum(r.get("start_err", 0) < 0 or r.get("end_err", 0) > 0 for r in ext)
+        print(f"  gland extent (true vs predicted slice range): over-runs the true end in {over}/{len(ext)} scans")
+        for r in ext:
+            print(f"    pt {r['patient']} wk {r['week']}: true {r['true']} pred {r['pred']}")
+        print(f"  Dice by prostate area: {metrics[name]['dice_by_prostate_area']}")
+        print(f"  prostate errors: {metrics[name]['prostate_errors']}")
 
     plot_examples(ds, {n: r["preds"] for n, r in results.items()}, os.path.join(args.out, "examples.png"))
     plot_position(metrics, os.path.join(args.out, "position_dice.png"))
+    plot_size({n: m["dice_by_prostate_area"] for n, m in metrics.items()}, os.path.join(args.out, "size_dice.png"))
     save_json(metrics, os.path.join(args.out, "comparison.json"))
 
     if len(metrics) == 2:
