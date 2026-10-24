@@ -1,0 +1,6 @@
+# torch: install the CUDA build first (see README), e.g.
+# pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cu126
+torch==2.14.0
+nibabel==5.4.2
+numpy==2.3.5
+matplotlib==3.11.1
