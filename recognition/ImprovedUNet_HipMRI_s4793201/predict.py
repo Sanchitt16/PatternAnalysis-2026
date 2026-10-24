@@ -14,11 +14,13 @@ Outputs (in --out, default figures/):
     examples.png           input | ground truth | prediction for typical test slices
     failures_<model>.png   the k worst prostate slices: input, GT, prediction, error overlay
                            (red = false positive, blue = false negative) for the autopsy
+    curves_<model>.png     training curves copied from runs/<model>/
     position_dice.png      prostate Dice on base/apex (boundary) vs mid-gland slices
     comparison.json        side-by-side metrics for README tables
 """
 import argparse
 import os
+import shutil
 
 import matplotlib
 matplotlib.use("Agg")
@@ -168,6 +170,9 @@ def main():
         kind, model = load_ckpt(path, device)
         name = pretty[kind]
         results[name], metrics[name] = evaluate(name, model, loader, ds, device, positions)
+        curves = os.path.join(os.path.dirname(path), "curves.png")  # written by train.py
+        if os.path.exists(curves):
+            shutil.copy(curves, os.path.join(args.out, f"curves_{kind}.png"))
         metrics[name]["worst_slices"] = plot_failures(
             ds, results[name], positions, name, os.path.join(args.out, f"failures_{kind}.png"))
 
