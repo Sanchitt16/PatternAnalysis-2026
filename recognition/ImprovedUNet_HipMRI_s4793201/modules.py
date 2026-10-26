@@ -1,5 +1,5 @@
 """
-modules.py - network components and loss for HipMRI 2D prostate segmentation.
+modules.py - network components and loss for HipMRI prostate segmentation (2D slices and 3D volumes).
 
 Two models are compared on identical splits:
 
@@ -7,7 +7,7 @@ Two models are compared on identical splits:
   image segmentation", MICCAI 2015. Double 3x3 conv blocks with BatchNorm + ReLU,
   max-pool downsampling, transposed-conv upsampling, concatenated skip connections.
 
-* ImprovedUNet2D (proposed) - 2D adaptation of Isensee et al., "Brain tumor segmentation
+* ImprovedUNet2D / ImprovedUNet3D - 2D and 3D versions of Isensee et al., "Brain tumor segmentation
   and radiomics survival prediction: Contribution to the BRATS 2017 challenge", 2018.
   Differences from the baseline, following Fig. 1 of that paper:
     - context modules: pre-activation residual blocks (norm -> lrelu -> conv x2) with
@@ -74,19 +74,27 @@ class UNet2D(nn.Module):
 
 
 # =========================================================================== improved U-Net
-def _norm_act(ch):
-    return [nn.InstanceNorm2d(ch, affine=True), nn.LeakyReLU(0.01, inplace=True)]
+# The Improved U-Net blocks are written once and built in 2D or 3D through `dim`, so the 2D
+# model (Normal tier) and the 3D model (Hard tier) share exactly the same architecture.
+_CONV = {2: nn.Conv2d, 3: nn.Conv3d}
+_NORM = {2: nn.InstanceNorm2d, 3: nn.InstanceNorm3d}
+_DROP = {2: nn.Dropout2d, 3: nn.Dropout3d}
+
+
+def _norm_act(ch, dim=2):
+    return [_NORM[dim](ch, affine=True), nn.LeakyReLU(0.01, inplace=True)]
 
 
 class ContextModule(nn.Module):
     """Pre-activation residual block: x + conv(lrelu(norm(dropout(conv(lrelu(norm(x))))))."""
 
-    def __init__(self, ch, p_drop=0.3):
+    def __init__(self, ch, p_drop=0.3, dim=2):
         super().__init__()
+        conv = _CONV[dim]
         self.body = nn.Sequential(
-            *_norm_act(ch), nn.Conv2d(ch, ch, 3, padding=1),
-            nn.Dropout2d(p_drop),
-            *_norm_act(ch), nn.Conv2d(ch, ch, 3, padding=1),
+            *_norm_act(ch, dim), conv(ch, ch, 3, padding=1),
+            _DROP[dim](p_drop),
+            *_norm_act(ch, dim), conv(ch, ch, 3, padding=1),
         )
 
     def forward(self, x):
@@ -99,63 +107,67 @@ class EncoderStage(nn.Module):
     The conv output is the residual shortcut, as in Isensee et al. Fig. 1.
     """
 
-    def __init__(self, cin, cout, stride, p_drop=0.3):
+    def __init__(self, cin, cout, stride, p_drop=0.3, dim=2):
         super().__init__()
-        self.conv = nn.Conv2d(cin, cout, 3, stride=stride, padding=1)
-        self.context = ContextModule(cout, p_drop)
+        self.conv = _CONV[dim](cin, cout, 3, stride=stride, padding=1)
+        self.context = ContextModule(cout, p_drop, dim)
 
     def forward(self, x):
         return self.context(self.conv(x))
 
 
 class UpsampleModule(nn.Module):
-    """Nearest-neighbour x2 upsample then 3x3 conv that halves the channels."""
+    """Nearest-neighbour x2 upsample then 3x3(x3) conv that halves the channels."""
 
-    def __init__(self, cin, cout):
+    def __init__(self, cin, cout, dim=2):
         super().__init__()
-        self.conv = nn.Sequential(*_norm_act(cin), nn.Conv2d(cin, cout, 3, padding=1))
+        self.conv = nn.Sequential(*_norm_act(cin, dim), _CONV[dim](cin, cout, 3, padding=1))
 
     def forward(self, x):
         return self.conv(F.interpolate(x, scale_factor=2, mode="nearest"))
 
 
 class LocalisationModule(nn.Module):
-    """3x3 conv (on the concatenated skip + upsampled features) then 1x1 conv halving channels."""
+    """3x3(x3) conv on the concatenated skip + upsampled features, then 1x1 conv halving channels."""
 
-    def __init__(self, cin, cout):
+    def __init__(self, cin, cout, dim=2):
         super().__init__()
+        conv = _CONV[dim]
         self.body = nn.Sequential(
-            *_norm_act(cin), nn.Conv2d(cin, cin // 2, 3, padding=1),
-            *_norm_act(cin // 2), nn.Conv2d(cin // 2, cout, 1),
+            *_norm_act(cin, dim), conv(cin, cin // 2, 3, padding=1),
+            *_norm_act(cin // 2, dim), conv(cin // 2, cout, 1),
         )
 
     def forward(self, x):
         return self.body(x)
 
 
-class ImprovedUNet2D(nn.Module):
-    """2D Improved U-Net with residual context modules and deep supervision.
+class ImprovedUNet(nn.Module):
+    """Improved U-Net (Isensee et al. 2018) with residual context modules and deep supervision.
 
-    With base=16 the encoder widths are 16, 32, 64, 128, 256 (5 levels), as in the paper.
-    Input height/width must be divisible by 16 (256 x 128 is).
+    dim=2 for slices [B,1,H,W], dim=3 for volumes [B,1,D,H,W]. With base=16 the encoder widths
+    are 16, 32, 64, 128, 256 (5 levels), as in the paper. Every spatial size must be divisible
+    by 16 (256 x 128 slices and 128 x 128 x 64 volumes are).
     """
 
-    def __init__(self, in_channels=1, num_classes=6, base=16, p_drop=0.3):
+    def __init__(self, in_channels=1, num_classes=6, base=16, p_drop=0.3, dim=2):
         super().__init__()
+        self.dim = dim
+        conv = _CONV[dim]
         w = [base * 2 ** i for i in range(5)]  # 16, 32, 64, 128, 256
-        self.enc = nn.ModuleList([EncoderStage(in_channels, w[0], 1, p_drop)] +
-                                 [EncoderStage(w[i - 1], w[i], 2, p_drop) for i in range(1, 5)])
+        self.enc = nn.ModuleList([EncoderStage(in_channels, w[0], 1, p_drop, dim)] +
+                                 [EncoderStage(w[i - 1], w[i], 2, p_drop, dim) for i in range(1, 5)])
 
         # decoder, from the bottleneck (w[4]) upwards
-        self.up = nn.ModuleList([UpsampleModule(w[i], w[i - 1]) for i in range(4, 0, -1)])
+        self.up = nn.ModuleList([UpsampleModule(w[i], w[i - 1], dim) for i in range(4, 0, -1)])
         # localisation modules for levels 3, 2, 1 (the top level uses a plain conv)
-        self.loc = nn.ModuleList([LocalisationModule(2 * w[i], w[i]) for i in range(3, 0, -1)])
-        self.top = nn.Sequential(*_norm_act(2 * w[0]), nn.Conv2d(2 * w[0], 2 * w[0], 3, padding=1),
-                                 *_norm_act(2 * w[0]))
+        self.loc = nn.ModuleList([LocalisationModule(2 * w[i], w[i], dim) for i in range(3, 0, -1)])
+        self.top = nn.Sequential(*_norm_act(2 * w[0], dim), conv(2 * w[0], 2 * w[0], 3, padding=1),
+                                 *_norm_act(2 * w[0], dim))
         # deep-supervision heads at levels 2, 1 and the top
-        self.seg2 = nn.Conv2d(w[2], num_classes, 1)
-        self.seg1 = nn.Conv2d(w[1], num_classes, 1)
-        self.seg0 = nn.Conv2d(2 * w[0], num_classes, 1)
+        self.seg2 = conv(w[2], num_classes, 1)
+        self.seg1 = conv(w[1], num_classes, 1)
+        self.seg0 = conv(2 * w[0], num_classes, 1)
 
     def forward(self, x):
         skips = []
@@ -178,10 +190,25 @@ class ImprovedUNet2D(nn.Module):
                 seg_maps.append(self.seg0(x))  # level 0 (full resolution)
 
         # deep supervision: upsample coarse maps and sum element-wise
+        mode = "bilinear" if self.dim == 2 else "trilinear"
         out = seg_maps[0]
         for s in seg_maps[1:]:
-            out = F.interpolate(out, size=s.shape[-2:], mode="bilinear", align_corners=False) + s
+            out = F.interpolate(out, size=s.shape[2:], mode=mode, align_corners=False) + s
         return out
+
+
+class ImprovedUNet2D(ImprovedUNet):
+    """2D Improved U-Net (Normal tier)."""
+
+    def __init__(self, in_channels=1, num_classes=6, base=16, p_drop=0.3):
+        super().__init__(in_channels, num_classes, base, p_drop, dim=2)
+
+
+class ImprovedUNet3D(ImprovedUNet):
+    """3D Improved U-Net (Hard tier) - same blocks with Conv3d / InstanceNorm3d / Dropout3d."""
+
+    def __init__(self, in_channels=1, num_classes=6, base=16, p_drop=0.3):
+        super().__init__(in_channels, num_classes, base, p_drop, dim=3)
 
 
 # =========================================================================== loss
@@ -209,8 +236,8 @@ class DiceCELoss(nn.Module):
     def forward(self, logits, target):
         ce = F.cross_entropy(logits, target)
         probs = logits.float().softmax(1)
-        onehot = F.one_hot(target, self.num_classes).permute(0, 3, 1, 2).float()
-        dims = (0, 2, 3)
+        onehot = F.one_hot(target, self.num_classes).movedim(-1, 1).float()  # [B,C,...] (2D or 3D)
+        dims = (0,) + tuple(range(2, logits.dim()))
         inter = (probs * onehot).sum(dims)
         denom = probs.sum(dims) + onehot.sum(dims)
         dice = (2 * inter + self.smooth) / (denom + self.smooth)
@@ -224,7 +251,7 @@ class DiceCELoss(nn.Module):
 
 
 # =========================================================================== factory
-MODELS = {"unet": UNet2D, "improved": ImprovedUNet2D}
+MODELS = {"unet": UNet2D, "improved": ImprovedUNet2D, "improved3d": ImprovedUNet3D}
 
 
 def build_model(name, num_classes=6):
