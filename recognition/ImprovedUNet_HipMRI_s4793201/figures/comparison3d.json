@@ -1,0 +1,2150 @@
+{
+  "models": {
+    "U-Net 2D (baseline)": {
+      "pooled_dice": {
+        "background": 0.9752,
+        "body": 0.9811,
+        "bone": 0.9403,
+        "bladder": 0.9666,
+        "rectum": 0.8586,
+        "prostate": 0.8757
+      },
+      "pooled_iou": {
+        "background": 0.9517,
+        "body": 0.963,
+        "bone": 0.8874,
+        "bladder": 0.9354,
+        "rectum": 0.7522,
+        "prostate": 0.7789
+      },
+      "prostate_slice_dice_mean": 0.7643869716377197,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.0,
+      "per_patient_prostate_dice": {
+        "40": 0.876,
+        "41": 0.865,
+        "42": 0.8802
+      },
+      "prostate_dice_boundary": 0.8252,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.671605266381928,
+      "prostate_dice_mid": 0.9148,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9128377000469863,
+      "parameters": 7762630,
+      "latency_ms_per_slice": 4.41,
+      "inference_peak_vram_mb": 55.9,
+      "dice_by_prostate_area": [
+        {
+          "bin": "1-49",
+          "slices": 14,
+          "pooled_dice": 0.3241,
+          "missed_slices": 11
+        },
+        {
+          "bin": "50-149",
+          "slices": 28,
+          "pooled_dice": 0.6167,
+          "missed_slices": 7
+        },
+        {
+          "bin": "150-399",
+          "slices": 107,
+          "pooled_dice": 0.8733,
+          "missed_slices": 0
+        },
+        {
+          "bin": ">=400",
+          "slices": 46,
+          "pooled_dice": 0.9136,
+          "missed_slices": 0
+        }
+      ],
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 6479,
+          "bladder": 852,
+          "rectum": 19
+        },
+        "missed_pixels_predicted_as": {
+          "body": 7377,
+          "bladder": 20,
+          "rectum": 152
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            17,
+            37
+          ],
+          "start_err": 1,
+          "end_err": -1
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            21,
+            38
+          ],
+          "start_err": 1,
+          "end_err": -1
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            19,
+            37
+          ],
+          "start_err": 1,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            15,
+            32
+          ],
+          "start_err": 2,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            33
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            23,
+            40
+          ],
+          "start_err": 1,
+          "end_err": -1
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            18,
+            34
+          ],
+          "start_err": 1,
+          "end_err": -2
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            40
+          ],
+          "start_err": 1,
+          "end_err": 0
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            11,
+            39
+          ],
+          "start_err": 2,
+          "end_err": -1
+        }
+      ]
+    },
+    "Improved U-Net 2D": {
+      "pooled_dice": {
+        "background": 0.975,
+        "body": 0.9797,
+        "bone": 0.9353,
+        "bladder": 0.9619,
+        "rectum": 0.8449,
+        "prostate": 0.8511
+      },
+      "pooled_iou": {
+        "background": 0.9512,
+        "body": 0.9602,
+        "bone": 0.8784,
+        "bladder": 0.9266,
+        "rectum": 0.7314,
+        "prostate": 0.7408
+      },
+      "prostate_slice_dice_mean": 0.7541415918006027,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.011594202898550725,
+      "per_patient_prostate_dice": {
+        "40": 0.8536,
+        "41": 0.8678,
+        "42": 0.8352
+      },
+      "prostate_dice_boundary": 0.7862,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.6580737592386203,
+      "prostate_dice_mid": 0.9084,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9078501238997747,
+      "parameters": 2780034,
+      "latency_ms_per_slice": 10.39,
+      "inference_peak_vram_mb": 24.3,
+      "dice_by_prostate_area": [
+        {
+          "bin": "1-49",
+          "slices": 14,
+          "pooled_dice": 0.285,
+          "missed_slices": 10
+        },
+        {
+          "bin": "50-149",
+          "slices": 28,
+          "pooled_dice": 0.5964,
+          "missed_slices": 4
+        },
+        {
+          "bin": "150-399",
+          "slices": 107,
+          "pooled_dice": 0.8548,
+          "missed_slices": 1
+        },
+        {
+          "bin": ">=400",
+          "slices": 46,
+          "pooled_dice": 0.8922,
+          "missed_slices": 0
+        }
+      ],
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 8858,
+          "bladder": 952,
+          "rectum": 293
+        },
+        "missed_pixels_predicted_as": {
+          "background": 11,
+          "body": 7895,
+          "bone": 1,
+          "bladder": 162,
+          "rectum": 8
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            17,
+            38
+          ],
+          "start_err": 1,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            21,
+            39
+          ],
+          "start_err": 1,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            19,
+            37
+          ],
+          "start_err": 1,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            15,
+            34
+          ],
+          "start_err": 2,
+          "end_err": 2
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            36
+          ],
+          "start_err": 0,
+          "end_err": 3
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            23,
+            40
+          ],
+          "start_err": 1,
+          "end_err": -1
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            17,
+            35
+          ],
+          "start_err": 0,
+          "end_err": -1
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            41
+          ],
+          "start_err": 1,
+          "end_err": 1
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            11,
+            37
+          ],
+          "start_err": 2,
+          "end_err": -3
+        }
+      ]
+    },
+    "Improved U-Net 3D": {
+      "pooled_dice": {
+        "background": 0.9672,
+        "body": 0.9777,
+        "bone": 0.934,
+        "bladder": 0.9572,
+        "rectum": 0.8546,
+        "prostate": 0.8696
+      },
+      "pooled_iou": {
+        "background": 0.9365,
+        "body": 0.9564,
+        "bone": 0.8762,
+        "bladder": 0.9179,
+        "rectum": 0.746,
+        "prostate": 0.7693
+      },
+      "prostate_slice_dice_mean": 0.7951382112046946,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.008695652173913044,
+      "per_patient_prostate_dice": {
+        "40": 0.8784,
+        "41": 0.864,
+        "42": 0.849
+      },
+      "prostate_dice_boundary": 0.8334,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.7244655346298977,
+      "prostate_dice_mid": 0.9046,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9082144937243696,
+      "volumetric_dice_full_res": {
+        "background": 0.9944,
+        "body": 0.9806,
+        "bone": 0.9236,
+        "bladder": 0.9538,
+        "rectum": 0.8204,
+        "prostate": 0.8696
+      },
+      "parameters": 8282274,
+      "latency_ms_per_slice": 57.5,
+      "inference_peak_vram_mb": 631.0,
+      "checkpoint": "runs/improved3d_rangpur_s42/best.pt",
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 10833,
+          "bladder": 983,
+          "rectum": 86
+        },
+        "missed_pixels_predicted_as": {
+          "background": 8,
+          "body": 4467,
+          "bone": 1,
+          "bladder": 144,
+          "rectum": 74
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            16,
+            39
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            20,
+            40
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            18,
+            37
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            16,
+            33
+          ],
+          "start_err": 3,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": 2
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            22,
+            41
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            18,
+            35
+          ],
+          "start_err": 1,
+          "end_err": -1
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            43
+          ],
+          "start_err": 1,
+          "end_err": 3
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            10,
+            39
+          ],
+          "start_err": 1,
+          "end_err": -1
+        }
+      ],
+      "dice_by_prostate_area": [
+        {
+          "bin": "1-49",
+          "slices": 14,
+          "pooled_dice": 0.3444,
+          "missed_slices": 6
+        },
+        {
+          "bin": "50-149",
+          "slices": 28,
+          "pooled_dice": 0.669,
+          "missed_slices": 2
+        },
+        {
+          "bin": "150-399",
+          "slices": 107,
+          "pooled_dice": 0.8828,
+          "missed_slices": 0
+        },
+        {
+          "bin": ">=400",
+          "slices": 46,
+          "pooled_dice": 0.8939,
+          "missed_slices": 0
+        }
+      ],
+      "worst_slices": [
+        193,
+        377,
+        195,
+        194,
+        461
+      ]
+    },
+    "Improved U-Net 3D + largest component": {
+      "pooled_dice": {
+        "background": 0.9672,
+        "body": 0.9777,
+        "bone": 0.934,
+        "bladder": 0.9572,
+        "rectum": 0.8546,
+        "prostate": 0.8696
+      },
+      "pooled_iou": {
+        "background": 0.9365,
+        "body": 0.9564,
+        "bone": 0.8762,
+        "bladder": 0.9179,
+        "rectum": 0.746,
+        "prostate": 0.7693
+      },
+      "prostate_slice_dice_mean": 0.7951382112046946,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.008695652173913044,
+      "per_patient_prostate_dice": {
+        "40": 0.8784,
+        "41": 0.864,
+        "42": 0.849
+      },
+      "prostate_dice_boundary": 0.8334,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.7244655346298977,
+      "prostate_dice_mid": 0.9046,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9082144937243696,
+      "volumetric_dice_full_res": {
+        "background": 0.9944,
+        "body": 0.9806,
+        "bone": 0.9236,
+        "bladder": 0.9538,
+        "rectum": 0.8204,
+        "prostate": 0.8696
+      },
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 10833,
+          "bladder": 983,
+          "rectum": 86
+        },
+        "missed_pixels_predicted_as": {
+          "background": 8,
+          "body": 4467,
+          "bone": 1,
+          "bladder": 144,
+          "rectum": 74
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            16,
+            39
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            20,
+            40
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            18,
+            37
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            16,
+            33
+          ],
+          "start_err": 3,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": 2
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            22,
+            41
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            18,
+            35
+          ],
+          "start_err": 1,
+          "end_err": -1
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            43
+          ],
+          "start_err": 1,
+          "end_err": 3
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            10,
+            39
+          ],
+          "start_err": 1,
+          "end_err": -1
+        }
+      ],
+      "checkpoint": "runs/improved3d_rangpur_s42/best.pt",
+      "dice_by_prostate_area": [
+        {
+          "bin": "1-49",
+          "slices": 14,
+          "pooled_dice": 0.3444,
+          "missed_slices": 6
+        },
+        {
+          "bin": "50-149",
+          "slices": 28,
+          "pooled_dice": 0.669,
+          "missed_slices": 2
+        },
+        {
+          "bin": "150-399",
+          "slices": 107,
+          "pooled_dice": 0.8828,
+          "missed_slices": 0
+        },
+        {
+          "bin": ">=400",
+          "slices": 46,
+          "pooled_dice": 0.8939,
+          "missed_slices": 0
+        }
+      ]
+    }
+  },
+  "improved3d_seeds": [
+    {
+      "pooled_dice": {
+        "background": 0.9672,
+        "body": 0.9777,
+        "bone": 0.934,
+        "bladder": 0.9572,
+        "rectum": 0.8546,
+        "prostate": 0.8696
+      },
+      "pooled_iou": {
+        "background": 0.9365,
+        "body": 0.9564,
+        "bone": 0.8762,
+        "bladder": 0.9179,
+        "rectum": 0.746,
+        "prostate": 0.7693
+      },
+      "prostate_slice_dice_mean": 0.7951382112046946,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.008695652173913044,
+      "per_patient_prostate_dice": {
+        "40": 0.8784,
+        "41": 0.864,
+        "42": 0.849
+      },
+      "prostate_dice_boundary": 0.8334,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.7244655346298977,
+      "prostate_dice_mid": 0.9046,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9082144937243696,
+      "volumetric_dice_full_res": {
+        "background": 0.9944,
+        "body": 0.9806,
+        "bone": 0.9236,
+        "bladder": 0.9538,
+        "rectum": 0.8204,
+        "prostate": 0.8696
+      },
+      "parameters": 8282274,
+      "latency_ms_per_slice": 57.5,
+      "inference_peak_vram_mb": 631.0,
+      "checkpoint": "runs/improved3d_rangpur_s42/best.pt",
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 10833,
+          "bladder": 983,
+          "rectum": 86
+        },
+        "missed_pixels_predicted_as": {
+          "background": 8,
+          "body": 4467,
+          "bone": 1,
+          "bladder": 144,
+          "rectum": 74
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            16,
+            39
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            20,
+            40
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            18,
+            37
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            16,
+            33
+          ],
+          "start_err": 3,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": 2
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            22,
+            41
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            18,
+            35
+          ],
+          "start_err": 1,
+          "end_err": -1
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            43
+          ],
+          "start_err": 1,
+          "end_err": 3
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            10,
+            39
+          ],
+          "start_err": 1,
+          "end_err": -1
+        }
+      ],
+      "dice_by_prostate_area": [
+        {
+          "bin": "1-49",
+          "slices": 14,
+          "pooled_dice": 0.3444,
+          "missed_slices": 6
+        },
+        {
+          "bin": "50-149",
+          "slices": 28,
+          "pooled_dice": 0.669,
+          "missed_slices": 2
+        },
+        {
+          "bin": "150-399",
+          "slices": 107,
+          "pooled_dice": 0.8828,
+          "missed_slices": 0
+        },
+        {
+          "bin": ">=400",
+          "slices": 46,
+          "pooled_dice": 0.8939,
+          "missed_slices": 0
+        }
+      ],
+      "worst_slices": [
+        193,
+        377,
+        195,
+        194,
+        461
+      ]
+    },
+    {
+      "pooled_dice": {
+        "background": 0.9682,
+        "body": 0.9758,
+        "bone": 0.9257,
+        "bladder": 0.9598,
+        "rectum": 0.8248,
+        "prostate": 0.8726
+      },
+      "pooled_iou": {
+        "background": 0.9384,
+        "body": 0.9527,
+        "bone": 0.8618,
+        "bladder": 0.9226,
+        "rectum": 0.7018,
+        "prostate": 0.7739
+      },
+      "prostate_slice_dice_mean": 0.7735172231761235,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.0,
+      "per_patient_prostate_dice": {
+        "40": 0.8766,
+        "41": 0.885,
+        "42": 0.8553
+      },
+      "prostate_dice_boundary": 0.8248,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.6861154482647706,
+      "prostate_dice_mid": 0.9113,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9133600630342884,
+      "volumetric_dice_full_res": {
+        "background": 0.9945,
+        "body": 0.979,
+        "bone": 0.9114,
+        "bladder": 0.9566,
+        "rectum": 0.7862,
+        "prostate": 0.8725
+      },
+      "parameters": 8282274,
+      "latency_ms_per_slice": 59.24,
+      "inference_peak_vram_mb": 631.2,
+      "checkpoint": "runs/improved3d_rangpur_s1/best.pt",
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 8589,
+          "bladder": 684,
+          "rectum": 20
+        },
+        "missed_pixels_predicted_as": {
+          "body": 6004,
+          "bladder": 94,
+          "rectum": 282
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": -3
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            20,
+            39
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            18,
+            36
+          ],
+          "start_err": 0,
+          "end_err": -1
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            16,
+            59
+          ],
+          "start_err": 3,
+          "end_err": 27
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": 2
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            22,
+            41
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": -1,
+          "end_err": -1
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            41
+          ],
+          "start_err": 1,
+          "end_err": 1
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            10,
+            37
+          ],
+          "start_err": 1,
+          "end_err": -3
+        }
+      ]
+    },
+    {
+      "pooled_dice": {
+        "background": 0.9668,
+        "body": 0.9757,
+        "bone": 0.9219,
+        "bladder": 0.9586,
+        "rectum": 0.8517,
+        "prostate": 0.8734
+      },
+      "pooled_iou": {
+        "background": 0.9357,
+        "body": 0.9526,
+        "bone": 0.8551,
+        "bladder": 0.9204,
+        "rectum": 0.7417,
+        "prostate": 0.7753
+      },
+      "prostate_slice_dice_mean": 0.775953318336154,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.008695652173913044,
+      "per_patient_prostate_dice": {
+        "40": 0.8682,
+        "41": 0.8686,
+        "42": 0.8901
+      },
+      "prostate_dice_boundary": 0.8303,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.6927024955145815,
+      "prostate_dice_mid": 0.9113,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9091546348506699,
+      "volumetric_dice_full_res": {
+        "background": 0.9943,
+        "body": 0.9788,
+        "bone": 0.9051,
+        "bladder": 0.9548,
+        "rectum": 0.8173,
+        "prostate": 0.8734
+      },
+      "parameters": 8282274,
+      "latency_ms_per_slice": 57.06,
+      "inference_peak_vram_mb": 631.2,
+      "checkpoint": "runs/improved3d_rangpur_s2/best.pt",
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 10391,
+          "bladder": 754,
+          "rectum": 113
+        },
+        "missed_pixels_predicted_as": {
+          "body": 4513,
+          "bone": 18,
+          "bladder": 131,
+          "rectum": 102
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            16,
+            37
+          ],
+          "start_err": 0,
+          "end_err": -1
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            20,
+            40
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            18,
+            37
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            16,
+            33
+          ],
+          "start_err": 3,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": 2
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            22,
+            41
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            17,
+            35
+          ],
+          "start_err": 0,
+          "end_err": -1
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            41
+          ],
+          "start_err": 1,
+          "end_err": 1
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            12,
+            37
+          ],
+          "start_err": 3,
+          "end_err": -3
+        }
+      ]
+    }
+  ],
+  "improved3d_seed_summary": {
+    "prostate Dice": {
+      "mean": 0.8718666666666667,
+      "std": 0.0020033305601755303,
+      "runs": [
+        0.8696,
+        0.8726,
+        0.8734
+      ]
+    },
+    "prostate Dice base/apex": {
+      "mean": 0.8295,
+      "std": 0.004355456348076542,
+      "runs": [
+        0.8334,
+        0.8248,
+        0.8303
+      ]
+    },
+    "prostate Dice mid-gland": {
+      "mean": 0.9090666666666667,
+      "std": 0.0038682468035705153,
+      "runs": [
+        0.9046,
+        0.9113,
+        0.9113
+      ]
+    },
+    "false-alarm rate": {
+      "mean": 0.005797101449275362,
+      "std": 0.00502043712338805,
+      "runs": [
+        0.008695652173913044,
+        0.0,
+        0.008695652173913044
+      ]
+    },
+    "rectum px labelled prostate": {
+      "mean": 73,
+      "std": 47.843494855622744,
+      "runs": [
+        86,
+        20,
+        113
+      ]
+    },
+    "scans over-running gland end": {
+      "mean": 4.333333333333333,
+      "std": 0.5773502691896257,
+      "runs": [
+        5,
+        4,
+        4
+      ]
+    },
+    "volumetric prostate Dice (full res)": {
+      "mean": 0.8718333333333333,
+      "std": 0.001985782801147499,
+      "runs": [
+        0.8696,
+        0.8725,
+        0.8734
+      ]
+    }
+  },
+  "improved3d_lcc_seeds": [
+    {
+      "pooled_dice": {
+        "background": 0.9672,
+        "body": 0.9777,
+        "bone": 0.934,
+        "bladder": 0.9572,
+        "rectum": 0.8546,
+        "prostate": 0.8696
+      },
+      "pooled_iou": {
+        "background": 0.9365,
+        "body": 0.9564,
+        "bone": 0.8762,
+        "bladder": 0.9179,
+        "rectum": 0.746,
+        "prostate": 0.7693
+      },
+      "prostate_slice_dice_mean": 0.7951382112046946,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.008695652173913044,
+      "per_patient_prostate_dice": {
+        "40": 0.8784,
+        "41": 0.864,
+        "42": 0.849
+      },
+      "prostate_dice_boundary": 0.8334,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.7244655346298977,
+      "prostate_dice_mid": 0.9046,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9082144937243696,
+      "volumetric_dice_full_res": {
+        "background": 0.9944,
+        "body": 0.9806,
+        "bone": 0.9236,
+        "bladder": 0.9538,
+        "rectum": 0.8204,
+        "prostate": 0.8696
+      },
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 10833,
+          "bladder": 983,
+          "rectum": 86
+        },
+        "missed_pixels_predicted_as": {
+          "background": 8,
+          "body": 4467,
+          "bone": 1,
+          "bladder": 144,
+          "rectum": 74
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            16,
+            39
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            20,
+            40
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            18,
+            37
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            16,
+            33
+          ],
+          "start_err": 3,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": 2
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            22,
+            41
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            18,
+            35
+          ],
+          "start_err": 1,
+          "end_err": -1
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            43
+          ],
+          "start_err": 1,
+          "end_err": 3
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            10,
+            39
+          ],
+          "start_err": 1,
+          "end_err": -1
+        }
+      ],
+      "checkpoint": "runs/improved3d_rangpur_s42/best.pt",
+      "dice_by_prostate_area": [
+        {
+          "bin": "1-49",
+          "slices": 14,
+          "pooled_dice": 0.3444,
+          "missed_slices": 6
+        },
+        {
+          "bin": "50-149",
+          "slices": 28,
+          "pooled_dice": 0.669,
+          "missed_slices": 2
+        },
+        {
+          "bin": "150-399",
+          "slices": 107,
+          "pooled_dice": 0.8828,
+          "missed_slices": 0
+        },
+        {
+          "bin": ">=400",
+          "slices": 46,
+          "pooled_dice": 0.8939,
+          "missed_slices": 0
+        }
+      ]
+    },
+    {
+      "pooled_dice": {
+        "background": 0.9682,
+        "body": 0.9758,
+        "bone": 0.9257,
+        "bladder": 0.9598,
+        "rectum": 0.8248,
+        "prostate": 0.8726
+      },
+      "pooled_iou": {
+        "background": 0.9384,
+        "body": 0.9527,
+        "bone": 0.8618,
+        "bladder": 0.9226,
+        "rectum": 0.7018,
+        "prostate": 0.774
+      },
+      "prostate_slice_dice_mean": 0.7735172231761235,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.0,
+      "per_patient_prostate_dice": {
+        "40": 0.8767,
+        "41": 0.885,
+        "42": 0.8553
+      },
+      "prostate_dice_boundary": 0.8248,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.6861154482647706,
+      "prostate_dice_mid": 0.9113,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9133600630342884,
+      "volumetric_dice_full_res": {
+        "background": 0.9945,
+        "body": 0.979,
+        "bone": 0.9114,
+        "bladder": 0.9566,
+        "rectum": 0.7862,
+        "prostate": 0.8726
+      },
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 8589,
+          "bladder": 684,
+          "rectum": 13
+        },
+        "missed_pixels_predicted_as": {
+          "body": 6004,
+          "bladder": 94,
+          "rectum": 282
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": -3
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            20,
+            39
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            18,
+            36
+          ],
+          "start_err": 0,
+          "end_err": -1
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            16,
+            33
+          ],
+          "start_err": 3,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": 2
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            22,
+            41
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": -1,
+          "end_err": -1
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            41
+          ],
+          "start_err": 1,
+          "end_err": 1
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            10,
+            37
+          ],
+          "start_err": 1,
+          "end_err": -3
+        }
+      ],
+      "checkpoint": "runs/improved3d_rangpur_s1/best.pt"
+    },
+    {
+      "pooled_dice": {
+        "background": 0.9668,
+        "body": 0.9757,
+        "bone": 0.9219,
+        "bladder": 0.9586,
+        "rectum": 0.8517,
+        "prostate": 0.8734
+      },
+      "pooled_iou": {
+        "background": 0.9357,
+        "body": 0.9526,
+        "bone": 0.8551,
+        "bladder": 0.9204,
+        "rectum": 0.7417,
+        "prostate": 0.7753
+      },
+      "prostate_slice_dice_mean": 0.775953318336154,
+      "prostate_free_slices": 345,
+      "false_alarm_rate": 0.008695652173913044,
+      "per_patient_prostate_dice": {
+        "40": 0.8682,
+        "41": 0.8686,
+        "42": 0.8901
+      },
+      "prostate_dice_boundary": 0.8303,
+      "n_boundary_slices": 120,
+      "prostate_slice_dice_boundary": 0.6927024955145815,
+      "prostate_dice_mid": 0.9113,
+      "n_mid_slices": 75,
+      "prostate_slice_dice_mid": 0.9091546348506699,
+      "volumetric_dice_full_res": {
+        "background": 0.9943,
+        "body": 0.9788,
+        "bone": 0.9051,
+        "bladder": 0.9548,
+        "rectum": 0.8173,
+        "prostate": 0.8734
+      },
+      "prostate_errors": {
+        "false_positive_pixels_on": {
+          "body": 10391,
+          "bladder": 754,
+          "rectum": 113
+        },
+        "missed_pixels_predicted_as": {
+          "body": 4513,
+          "bone": 18,
+          "bladder": 131,
+          "rectum": 102
+        }
+      },
+      "gland_extent": [
+        {
+          "patient": 40,
+          "week": 0,
+          "true": [
+            16,
+            38
+          ],
+          "pred": [
+            16,
+            37
+          ],
+          "start_err": 0,
+          "end_err": -1
+        },
+        {
+          "patient": 40,
+          "week": 1,
+          "true": [
+            20,
+            39
+          ],
+          "pred": [
+            20,
+            40
+          ],
+          "start_err": 0,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 2,
+          "true": [
+            18,
+            37
+          ],
+          "pred": [
+            18,
+            37
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 3,
+          "true": [
+            13,
+            32
+          ],
+          "pred": [
+            16,
+            33
+          ],
+          "start_err": 3,
+          "end_err": 1
+        },
+        {
+          "patient": 40,
+          "week": 4,
+          "true": [
+            16,
+            33
+          ],
+          "pred": [
+            16,
+            35
+          ],
+          "start_err": 0,
+          "end_err": 2
+        },
+        {
+          "patient": 40,
+          "week": 5,
+          "true": [
+            22,
+            41
+          ],
+          "pred": [
+            22,
+            41
+          ],
+          "start_err": 0,
+          "end_err": 0
+        },
+        {
+          "patient": 40,
+          "week": 7,
+          "true": [
+            17,
+            36
+          ],
+          "pred": [
+            17,
+            35
+          ],
+          "start_err": 0,
+          "end_err": -1
+        },
+        {
+          "patient": 41,
+          "week": 0,
+          "true": [
+            19,
+            40
+          ],
+          "pred": [
+            20,
+            41
+          ],
+          "start_err": 1,
+          "end_err": 1
+        },
+        {
+          "patient": 42,
+          "week": 0,
+          "true": [
+            9,
+            40
+          ],
+          "pred": [
+            12,
+            37
+          ],
+          "start_err": 3,
+          "end_err": -3
+        }
+      ],
+      "checkpoint": "runs/improved3d_rangpur_s2/best.pt"
+    }
+  ],
+  "improved3d_lcc_seed_summary": {
+    "prostate Dice": {
+      "mean": 0.8718666666666667,
+      "std": 0.0020033305601755303,
+      "runs": [
+        0.8696,
+        0.8726,
+        0.8734
+      ]
+    },
+    "prostate Dice base/apex": {
+      "mean": 0.8295,
+      "std": 0.004355456348076542,
+      "runs": [
+        0.8334,
+        0.8248,
+        0.8303
+      ]
+    },
+    "prostate Dice mid-gland": {
+      "mean": 0.9090666666666667,
+      "std": 0.0038682468035705153,
+      "runs": [
+        0.9046,
+        0.9113,
+        0.9113
+      ]
+    },
+    "false-alarm rate": {
+      "mean": 0.005797101449275362,
+      "std": 0.00502043712338805,
+      "runs": [
+        0.008695652173913044,
+        0.0,
+        0.008695652173913044
+      ]
+    },
+    "rectum px labelled prostate": {
+      "mean": 70.66666666666667,
+      "std": 51.73329037798904,
+      "runs": [
+        86,
+        13,
+        113
+      ]
+    },
+    "scans over-running gland end": {
+      "mean": 4.333333333333333,
+      "std": 0.5773502691896257,
+      "runs": [
+        5,
+        4,
+        4
+      ]
+    },
+    "volumetric prostate Dice (full res)": {
+      "mean": 0.8718666666666667,
+      "std": 0.0020033305601755303,
+      "runs": [
+        0.8696,
+        0.8726,
+        0.8734
+      ]
+    }
+  },
+  "downsampling_ceiling": {
+    "pooled_dice": {
+      "background": 0.9673,
+      "body": 0.9859,
+      "bone": 0.9689,
+      "bladder": 0.9761,
+      "rectum": 0.9589,
+      "prostate": 0.9511
+    },
+    "prostate_dice_boundary": 0.9378,
+    "prostate_dice_mid": 0.9635,
+    "volumetric_dice_full_res": {
+      "background": 0.9946,
+      "body": 0.9864,
+      "bone": 0.9665,
+      "bladder": 0.9749,
+      "rectum": 0.9555,
+      "prostate": 0.9511
+    }
+  }
+}
