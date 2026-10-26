@@ -32,12 +32,12 @@ def get_device():
 
 # --------------------------------------------------------------------------- metrics
 def confusion_counts(pred, target, num_classes=NUM_CLASSES):
-    """Per-slice, per-class (intersection, |pred|, |gt|) counts. pred/target: [B,H,W] long.
+    """Per-sample, per-class (intersection, |pred|, |gt|) counts.
 
-    Returns three tensors of shape [B, C].
+    pred/target: [B,H,W] (slices) or [B,X,Y,Z] (volumes) long. Returns three tensors [B, C].
     """
-    p = torch.nn.functional.one_hot(pred, num_classes).flatten(1, 2)    # [B, HW, C]
-    g = torch.nn.functional.one_hot(target, num_classes).flatten(1, 2)
+    p = torch.nn.functional.one_hot(pred, num_classes).flatten(1, -2)    # [B, voxels, C]
+    g = torch.nn.functional.one_hot(target, num_classes).flatten(1, -2)
     inter = (p & g).sum(1)
     return inter, p.sum(1), g.sum(1)
 

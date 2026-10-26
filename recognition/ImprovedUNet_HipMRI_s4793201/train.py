@@ -8,6 +8,8 @@ Examples (run from this folder):
     python train.py --model unet --data-root ../../../data/keras_slices_data
     # 2-minute pipeline check
     python train.py --model improved --epochs 2 --limit 256 --data-root <path>
+    # Hard tier: 3D Improved U-Net on downsampled volumes (data root = HipMRI_Study_open)
+    python train.py --model improved3d --data-root ../../../data --epochs 150 --batch-size 2
 
 Outputs (in --out, default runs/<model>/):
     best.pt            weights with the best validation prostate Dice
@@ -32,6 +34,7 @@ from torch.utils.data import DataLoader
 
 from dataset import (CLASS_NAMES, HipMRISlices, assert_patient_disjoint, augment_batch,
                      gland_position)
+from dataset3d import HipMRIVolumes, augment_batch3d, list_volumes
 from modules import DiceCELoss, build_model, count_parameters
 from utils import (get_device, plot_history, predict_split, profile_inference, save_json,
                    set_seed, summarise)
@@ -39,8 +42,10 @@ from utils import (get_device, plot_history, predict_split, profile_inference, s
 
 def parse_args():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--model", choices=["unet", "improved"], default="improved")
-    ap.add_argument("--data-root", required=True, help="path to keras_slices_data")
+    ap.add_argument("--model", choices=["unet", "improved", "improved3d"], default="improved")
+    ap.add_argument("--data-root", required=True,
+                    help="2D: path to keras_slices_data; 3D: path to the folder holding semantic_MRs, "
+                         "semantic_labels_only and keras_slices_data")
     ap.add_argument("--cache-dir", default=None, help="where to cache .npz splits (default: data root)")
     ap.add_argument("--out", default=None)
     ap.add_argument("--epochs", type=int, default=40)
@@ -49,20 +54,30 @@ def parse_args():
     ap.add_argument("--weight-decay", type=float, default=1e-5)
     ap.add_argument("--workers", type=int, default=0, help="0 is safest on Windows")
     ap.add_argument("--no-augment", action="store_true")
-    ap.add_argument("--limit", type=int, default=None, help="use only N slices per split (smoke test)")
+    ap.add_argument("--limit", type=int, default=None, help="use only N slices/volumes per split (smoke test)")
     ap.add_argument("--seed", type=int, default=42)
     return ap.parse_args()
 
 
+def is_3d(args):
+    return args.model.endswith("3d")
+
+
 def make_loaders(args):
-    assert_patient_disjoint(args.data_root)
-    sets = {s: HipMRISlices(args.data_root, s, args.cache_dir, args.limit) for s in ("train", "validate", "test")}
+    if is_3d(args):
+        list_volumes(args.data_root)  # raises on patient leakage or unmatched labels
+        sets = {s: HipMRIVolumes(args.data_root, s, args.cache_dir, args.limit) for s in ("train", "validate", "test")}
+        eval_bs = 1
+    else:
+        assert_patient_disjoint(args.data_root)
+        sets = {s: HipMRISlices(args.data_root, s, args.cache_dir, args.limit) for s in ("train", "validate", "test")}
+        eval_bs = 32
     pin = torch.cuda.is_available()
     loaders = {
         "train": DataLoader(sets["train"], args.batch_size, shuffle=True, drop_last=True,
                             num_workers=args.workers, pin_memory=pin),
-        "validate": DataLoader(sets["validate"], 32, shuffle=False, num_workers=args.workers, pin_memory=pin),
-        "test": DataLoader(sets["test"], 32, shuffle=False, num_workers=args.workers, pin_memory=pin),
+        "validate": DataLoader(sets["validate"], eval_bs, shuffle=False, num_workers=args.workers, pin_memory=pin),
+        "test": DataLoader(sets["test"], eval_bs, shuffle=False, num_workers=args.workers, pin_memory=pin),
     }
     return sets, loaders
 
@@ -118,7 +133,7 @@ def main():
         for x, y, _ in loaders["train"]:
             x, y = x.to(device, non_blocking=True), y.to(device, non_blocking=True)
             if not args.no_augment:
-                x, y = augment_batch(x, y)
+                x, y = augment_batch3d(x, y) if is_3d(args) else augment_batch(x, y)
             opt.zero_grad(set_to_none=True)
             with torch.autocast(device.type, enabled=amp):
                 loss = loss_fn(model(x), y)
@@ -165,23 +180,26 @@ def main():
     model.load_state_dict(ckpt["state_dict"])
     test_ds = sets["test"]
     res = predict_split(model, loaders["test"], device, amp)
-    metrics = summarise(res, positions=gland_position(test_ds.keys, test_ds.masks))
+    # slice-position analysis needs per-slice counts; for 3D it is done in predict3d.py
+    positions = None if is_3d(args) else gland_position(test_ds.keys, test_ds.masks)
+    metrics = summarise(res, positions=positions)
     metrics.update({"model": args.model, "best_epoch": ckpt["epoch"],
                     "best_val_dice_prostate": ckpt["val_dice_prostate"],
                     "parameters": n_params, "train_time_min": round(train_time_min, 1),
                     "train_peak_vram_mb": round(train_vram, 1), "epochs": args.epochs,
                     "batch_size": args.batch_size, "device": torch.cuda.get_device_name(0) if amp else "cpu"})
-    metrics.update(profile_inference(model, device))
+    metrics.update(profile_inference(model, device, shape=(1, 1) + tuple(test_ds.images.shape[1:])))
     save_json(metrics, os.path.join(out, "test_metrics.json"))
 
     print("\n=== TEST (best checkpoint, epoch", ckpt["epoch"], ")")
     for c in CLASS_NAMES:
         print(f"  {c:<10} Dice {metrics['pooled_dice'][c]:.4f}  IoU {metrics['pooled_iou'][c]:.4f}")
-    print(f"  prostate Dice boundary {metrics['prostate_dice_boundary']:.4f} | mid {metrics['prostate_dice_mid']:.4f}")
+    if positions is not None:
+        print(f"  prostate Dice boundary {metrics['prostate_dice_boundary']:.4f} | mid {metrics['prostate_dice_mid']:.4f}")
     print(f"  false-alarm rate on prostate-free slices {metrics['false_alarm_rate']:.3f}")
     print(f"  per patient {metrics['per_patient_prostate_dice']}")
     print(f"  params {n_params / 1e6:.2f} M | train VRAM {train_vram:.0f} MB | "
-          f"latency {metrics['latency_ms_per_slice']} ms/slice | {train_time_min:.1f} min")
+          f"latency {metrics['latency_ms_per_slice']} ms/{'volume' if is_3d(args) else 'slice'} | {train_time_min:.1f} min")
 
 
 if __name__ == "__main__":
