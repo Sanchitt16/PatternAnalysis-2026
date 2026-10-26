@@ -112,8 +112,11 @@ def plot_failures(ds, res, positions, name, path, k=5):
 def plot_examples(ds, preds_by_model, path, n=4, seed=0):
     """Typical mid-gland test slices: input, GT and each model's prediction."""
     rng = np.random.default_rng(seed)
-    has_p = (ds.masks == PROSTATE).reshape(len(ds), -1).sum(1) > 300
-    idx = rng.choice(np.where(has_p)[0], size=min(n, has_p.sum()), replace=False)
+    area = (ds.masks == PROSTATE).reshape(len(ds), -1).sum(1)
+    pool = np.where(area > 300)[0]  # typical, clearly visible mid-gland slices
+    if len(pool) < n:  # small glands: fall back to the largest prostate slices
+        pool = np.argsort(area)[::-1][:max(n, 1)]
+    idx = np.sort(rng.choice(pool, size=min(n, len(pool)), replace=False))
     cols = 2 + len(preds_by_model)
     fig, ax = plt.subplots(len(idx), cols, figsize=(2.4 * cols, 3.2 * len(idx)))
     ax = np.atleast_2d(ax)

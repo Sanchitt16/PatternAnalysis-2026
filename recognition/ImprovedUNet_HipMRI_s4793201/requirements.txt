@@ -4,3 +4,5 @@ torch==2.14.0
 nibabel==5.4.2
 numpy==2.3.5
 matplotlib==3.11.1
+# optional: only for the largest-connected-component check in predict3d.py
+scipy>=1.11
