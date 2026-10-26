@@ -170,7 +170,7 @@ def main():
             w.writeheader()
             w.writerows(history)
         save_json(history, os.path.join(out, "history.json"))
-        plot_history(history, os.path.join(out, "curves.png"), f"{args.model} on HipMRI 2D")
+        plot_history(history, os.path.join(out, "curves.png"), f"{args.model} on HipMRI {'3D' if is_3d(args) else '2D'}")
 
     train_time_min = (time.time() - t_start) / 60
     train_vram = torch.cuda.max_memory_allocated() / 2 ** 20 if device.type == "cuda" else float("nan")
