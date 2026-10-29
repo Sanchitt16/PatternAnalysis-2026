@@ -35,14 +35,15 @@ from torch.utils.data import DataLoader
 from dataset import (CLASS_NAMES, HipMRISlices, assert_patient_disjoint, augment_batch,
                      gland_position)
 from dataset3d import HipMRIVolumes, augment_batch3d, list_volumes
-from modules import DiceCELoss, build_model, count_parameters
+from modules import MODEL_CHOICES, DiceCELoss, build_model, count_parameters
 from utils import (get_device, plot_history, predict_split, profile_inference, save_json,
                    set_seed, summarise)
 
 
 def parse_args():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--model", choices=["unet", "improved", "improved3d"], default="improved")
+    ap.add_argument("--model", choices=MODEL_CHOICES, default="improved",
+                    help="improved_nodrop / _bn / _nods / _noall are the 2D ablation variants")
     ap.add_argument("--data-root", required=True,
                     help="2D: path to keras_slices_data; 3D: path to the folder holding semantic_MRs, "
                          "semantic_labels_only and keras_slices_data")

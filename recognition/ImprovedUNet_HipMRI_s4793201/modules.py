@@ -77,24 +77,26 @@ class UNet2D(nn.Module):
 # The Improved U-Net blocks are written once and built in 2D or 3D through `dim`, so the 2D
 # model (Normal tier) and the 3D model (Hard tier) share exactly the same architecture.
 _CONV = {2: nn.Conv2d, 3: nn.Conv3d}
-_NORM = {2: nn.InstanceNorm2d, 3: nn.InstanceNorm3d}
+_NORM = {("instance", 2): nn.InstanceNorm2d, ("instance", 3): nn.InstanceNorm3d,
+         ("batch", 2): nn.BatchNorm2d, ("batch", 3): nn.BatchNorm3d}
 _DROP = {2: nn.Dropout2d, 3: nn.Dropout3d}
 
 
-def _norm_act(ch, dim=2):
-    return [_NORM[dim](ch, affine=True), nn.LeakyReLU(0.01, inplace=True)]
+def _norm_act(ch, dim=2, norm="instance"):
+    layer = _NORM[(norm, dim)](ch, affine=True) if norm == "instance" else _NORM[(norm, dim)](ch)
+    return [layer, nn.LeakyReLU(0.01, inplace=True)]
 
 
 class ContextModule(nn.Module):
     """Pre-activation residual block: x + conv(lrelu(norm(dropout(conv(lrelu(norm(x))))))."""
 
-    def __init__(self, ch, p_drop=0.3, dim=2):
+    def __init__(self, ch, p_drop=0.3, dim=2, norm="instance"):
         super().__init__()
         conv = _CONV[dim]
         self.body = nn.Sequential(
-            *_norm_act(ch, dim), conv(ch, ch, 3, padding=1),
+            *_norm_act(ch, dim, norm), conv(ch, ch, 3, padding=1),
             _DROP[dim](p_drop),
-            *_norm_act(ch, dim), conv(ch, ch, 3, padding=1),
+            *_norm_act(ch, dim, norm), conv(ch, ch, 3, padding=1),
         )
 
     def forward(self, x):
@@ -107,10 +109,10 @@ class EncoderStage(nn.Module):
     The conv output is the residual shortcut, as in Isensee et al. Fig. 1.
     """
 
-    def __init__(self, cin, cout, stride, p_drop=0.3, dim=2):
+    def __init__(self, cin, cout, stride, p_drop=0.3, dim=2, norm="instance"):
         super().__init__()
         self.conv = _CONV[dim](cin, cout, 3, stride=stride, padding=1)
-        self.context = ContextModule(cout, p_drop, dim)
+        self.context = ContextModule(cout, p_drop, dim, norm)
 
     def forward(self, x):
         return self.context(self.conv(x))
@@ -119,9 +121,9 @@ class EncoderStage(nn.Module):
 class UpsampleModule(nn.Module):
     """Nearest-neighbour x2 upsample then 3x3(x3) conv that halves the channels."""
 
-    def __init__(self, cin, cout, dim=2):
+    def __init__(self, cin, cout, dim=2, norm="instance"):
         super().__init__()
-        self.conv = nn.Sequential(*_norm_act(cin, dim), _CONV[dim](cin, cout, 3, padding=1))
+        self.conv = nn.Sequential(*_norm_act(cin, dim, norm), _CONV[dim](cin, cout, 3, padding=1))
 
     def forward(self, x):
         return self.conv(F.interpolate(x, scale_factor=2, mode="nearest"))
@@ -130,12 +132,12 @@ class UpsampleModule(nn.Module):
 class LocalisationModule(nn.Module):
     """3x3(x3) conv on the concatenated skip + upsampled features, then 1x1 conv halving channels."""
 
-    def __init__(self, cin, cout, dim=2):
+    def __init__(self, cin, cout, dim=2, norm="instance"):
         super().__init__()
         conv = _CONV[dim]
         self.body = nn.Sequential(
-            *_norm_act(cin, dim), conv(cin, cin // 2, 3, padding=1),
-            *_norm_act(cin // 2, dim), conv(cin // 2, cout, 1),
+            *_norm_act(cin, dim, norm), conv(cin, cin // 2, 3, padding=1),
+            *_norm_act(cin // 2, dim, norm), conv(cin // 2, cout, 1),
         )
 
     def forward(self, x):
@@ -150,23 +152,26 @@ class ImprovedUNet(nn.Module):
     by 16 (256 x 128 slices and 128 x 128 x 64 volumes are).
     """
 
-    def __init__(self, in_channels=1, num_classes=6, base=16, p_drop=0.3, dim=2):
+    def __init__(self, in_channels=1, num_classes=6, base=16, p_drop=0.3, dim=2, norm="instance",
+                 deep_supervision=True):
         super().__init__()
         self.dim = dim
+        self.deep_supervision = deep_supervision
         conv = _CONV[dim]
         w = [base * 2 ** i for i in range(5)]  # 16, 32, 64, 128, 256
-        self.enc = nn.ModuleList([EncoderStage(in_channels, w[0], 1, p_drop, dim)] +
-                                 [EncoderStage(w[i - 1], w[i], 2, p_drop, dim) for i in range(1, 5)])
+        self.enc = nn.ModuleList([EncoderStage(in_channels, w[0], 1, p_drop, dim, norm)] +
+                                 [EncoderStage(w[i - 1], w[i], 2, p_drop, dim, norm) for i in range(1, 5)])
 
         # decoder, from the bottleneck (w[4]) upwards
-        self.up = nn.ModuleList([UpsampleModule(w[i], w[i - 1], dim) for i in range(4, 0, -1)])
+        self.up = nn.ModuleList([UpsampleModule(w[i], w[i - 1], dim, norm) for i in range(4, 0, -1)])
         # localisation modules for levels 3, 2, 1 (the top level uses a plain conv)
-        self.loc = nn.ModuleList([LocalisationModule(2 * w[i], w[i], dim) for i in range(3, 0, -1)])
-        self.top = nn.Sequential(*_norm_act(2 * w[0], dim), conv(2 * w[0], 2 * w[0], 3, padding=1),
-                                 *_norm_act(2 * w[0], dim))
-        # deep-supervision heads at levels 2, 1 and the top
-        self.seg2 = conv(w[2], num_classes, 1)
-        self.seg1 = conv(w[1], num_classes, 1)
+        self.loc = nn.ModuleList([LocalisationModule(2 * w[i], w[i], dim, norm) for i in range(3, 0, -1)])
+        self.top = nn.Sequential(*_norm_act(2 * w[0], dim, norm), conv(2 * w[0], 2 * w[0], 3, padding=1),
+                                 *_norm_act(2 * w[0], dim, norm))
+        # segmentation heads: levels 2 and 1 only exist with deep supervision
+        if deep_supervision:
+            self.seg2 = conv(w[2], num_classes, 1)
+            self.seg1 = conv(w[1], num_classes, 1)
         self.seg0 = conv(2 * w[0], num_classes, 1)
 
     def forward(self, x):
@@ -181,9 +186,9 @@ class ImprovedUNet(nn.Module):
             x = torch.cat([up(x), skips.pop()], dim=1)  # concat with encoder level 3-i
             if i < 3:
                 x = self.loc[i](x)
-                if i == 1:
+                if self.deep_supervision and i == 1:
                     seg_maps.append(self.seg2(x))  # level 2
-                elif i == 2:
+                elif self.deep_supervision and i == 2:
                     seg_maps.append(self.seg1(x))  # level 1
             else:
                 x = self.top(x)
@@ -198,10 +203,12 @@ class ImprovedUNet(nn.Module):
 
 
 class ImprovedUNet2D(ImprovedUNet):
-    """2D Improved U-Net (Normal tier)."""
+    """2D Improved U-Net (Normal tier). The keyword options exist for the ablation study."""
 
-    def __init__(self, in_channels=1, num_classes=6, base=16, p_drop=0.3):
-        super().__init__(in_channels, num_classes, base, p_drop, dim=2)
+    def __init__(self, in_channels=1, num_classes=6, base=16, p_drop=0.3, norm="instance",
+                 deep_supervision=True):
+        super().__init__(in_channels, num_classes, base, p_drop, dim=2, norm=norm,
+                         deep_supervision=deep_supervision)
 
 
 class ImprovedUNet3D(ImprovedUNet):
@@ -253,10 +260,22 @@ class DiceCELoss(nn.Module):
 # =========================================================================== factory
 MODELS = {"unet": UNet2D, "improved": ImprovedUNet2D, "improved3d": ImprovedUNet3D}
 
+# Ablation of the 2D Improved U-Net: each variant switches off one suspected cause of its
+# lower accuracy versus the plain U-Net ("noall" switches off all three at once).
+ABLATIONS = {
+    "improved_nodrop": dict(p_drop=0.0),                 # A: no spatial dropout
+    "improved_bn": dict(norm="batch"),                   # B: BatchNorm instead of InstanceNorm
+    "improved_nods": dict(deep_supervision=False),       # C: no deep supervision
+    "improved_noall": dict(p_drop=0.0, norm="batch", deep_supervision=False),  # D: A + B + C
+}
+MODEL_CHOICES = list(MODELS) + list(ABLATIONS)
+
 
 def build_model(name, num_classes=6):
+    if name in ABLATIONS:
+        return ImprovedUNet2D(in_channels=1, num_classes=num_classes, **ABLATIONS[name])
     if name not in MODELS:
-        raise ValueError(f"model must be one of {list(MODELS)}")
+        raise ValueError(f"model must be one of {MODEL_CHOICES}")
     return MODELS[name](in_channels=1, num_classes=num_classes)
 
 
