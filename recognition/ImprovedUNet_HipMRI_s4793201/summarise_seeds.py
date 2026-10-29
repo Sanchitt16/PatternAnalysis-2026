@@ -5,6 +5,8 @@ Each run of train.py writes runs/<name>/test_metrics.json. This script groups ru
 (the "model" field in the json), and prints mean ± sample standard deviation for the key
 metrics as a GitHub-markdown table. It also saves figures/seed_summary.json.
 
+Also used for the ablation study (variants improved_nodrop / _bn / _nods / _noall).
+
 Example (run from this folder):
     python summarise_seeds.py --runs runs/improved runs/improved_s1 runs/improved_s2 \
                                      runs/unet runs/unet_s1 runs/unet_s2
@@ -15,7 +17,10 @@ import math
 import os
 import statistics as st
 
-PRETTY = {"improved": "Improved U-Net", "unet": "U-Net (baseline)"}
+PRETTY = {"improved": "Improved U-Net", "unet": "U-Net (baseline)",
+          "improved_nodrop": "A: no dropout", "improved_bn": "B: BatchNorm",
+          "improved_nods": "C: no deep supervision", "improved_noall": "D: A+B+C"}
+ORDER = ["unet", "improved", "improved_nodrop", "improved_bn", "improved_nods", "improved_noall"]
 CLASSES = ["body", "bone", "bladder", "rectum", "prostate"]
 
 
@@ -63,7 +68,7 @@ def main():
         m = load(r)
         groups.setdefault(m["model"], []).append(flat(m))
 
-    models = [k for k in ("unet", "improved") if k in groups]
+    models = [k for k in ORDER if k in groups]
     keys = list(groups[models[0]][0])
     print(f"runs per model: { {PRETTY[k]: len(groups[k]) for k in models} }\n")
     print("| Test metric (mean ± std over seeds) | " + " | ".join(PRETTY[k] for k in models) + " |")
