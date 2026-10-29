@@ -29,6 +29,7 @@ mean +- std over seeds.
 Outputs (in --out, default figures/):
     examples3d.png          the same test slices: input, ground truth, U-Net, Improved U-Net 2D, 3D
     failures_improved3d.png worst 3D test slices with error overlay
+    autopsy_comparison.png  the README's autopsy slices, all three models side by side (zoomed)
     position_dice3d.png     prostate Dice on base/apex vs mid-gland slices, all three models
     size_dice3d.png         prostate Dice by true prostate area, all three models
     curves_improved3d.png   training curves of the first 3D run
@@ -139,6 +140,59 @@ class _Oracle(torch.nn.Module):
         return F.one_hot(mask, 6).movedim(-1, 0)[None].float().to(x.device) * 20
 
 
+# Slices discussed in the README failure autopsy: (patient, week, slice) in 2D slice numbering.
+AUTOPSY_CASES = [(40, 0, 16), (40, 0, 38), (40, 3, 14), (40, 3, 34), (41, 0, 41)]
+
+
+def plot_autopsy_comparison(ds2d, results, cases, path, half=36):
+    """One figure for the autopsy: rows = cases, columns = ground truth + each model.
+
+    Each panel is the MR crop around the prostate with prostate overlaid: ground truth in
+    yellow; for models green = correct, red = false positive, blue = missed. The crop is
+    centred on the scan's prostate (so slices with no prostate are framed the same way).
+    """
+    import matplotlib.pyplot as plt
+
+    from dataset import PROSTATE as P
+    from predict import _error_overlay
+
+    idx = {tuple(int(v) for v in k): i for i, k in enumerate(ds2d.keys)}
+    names = list(results)
+    fig, ax = plt.subplots(len(cases), 1 + len(names), figsize=(2.5 * (1 + len(names)), 2.6 * len(cases)))
+    for r, (p, w, s) in enumerate(cases):
+        i = idx[(p, w, s)]
+        scan = (ds2d.keys[:, 0] == p) & (ds2d.keys[:, 1] == w)
+        yy, xx = np.nonzero((ds2d.masks[scan] == P).any(0))
+        cy, cx = (int(yy.mean()), int(xx.mean())) if len(yy) else (128, 64)
+        y0 = int(np.clip(cy - half, 0, ds2d.masks.shape[1] - 2 * half))
+        x0 = int(np.clip(cx - half, 0, ds2d.masks.shape[2] - 2 * half))
+        crop = (slice(y0, y0 + 2 * half), slice(x0, x0 + 2 * half))
+        img, gt = ds2d.images[i].astype(np.float32)[crop], ds2d.masks[i][crop]
+        gt_rgba = np.zeros(gt.shape + (4,))
+        gt_rgba[gt == P] = (1.0, 0.85, 0.1, 0.7)
+        ax[r, 0].imshow(img, cmap="gray")
+        ax[r, 0].imshow(gt_rgba, interpolation="nearest")
+        ax[r, 0].set_ylabel(f"pt {p} wk {w} sl {s}\n{int((ds2d.masks[i] == P).sum())} px true prostate", fontsize=8)
+        for c, n in enumerate(names, 1):
+            pr = results[n]["preds"][i]
+            ax[r, c].imshow(img, cmap="gray")
+            ax[r, c].imshow(_error_overlay(gt, pr[crop]), interpolation="nearest")
+            g, q = ds2d.masks[i] == P, pr == P
+            d = 2 * (g & q).sum() / max(g.sum() + q.sum(), 1)
+            ax[r, c].text(1, 6, "no prostate (correct)" if not g.any() and not q.any() else
+                          f"Dice {d:.2f}" if g.any() else f"{int(q.sum())} px false prostate",
+                          color="white", fontsize=7, bbox=dict(facecolor="black", alpha=0.6, pad=1))
+    for a, t in zip(ax[0], ["ground truth (yellow)"] + names):
+        a.set_title(t, fontsize=9)
+    for a in ax.ravel():
+        a.set_xticks([]); a.set_yticks([])
+    fig.suptitle("Failure cases, all models on the same slices (green correct, red false positive, blue missed)",
+                 fontsize=10)
+    fig.tight_layout()
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
+
+
 def headline(m):
     return {"prostate Dice": m["pooled_dice"]["prostate"],
             "prostate Dice base/apex": m["prostate_dice_boundary"],
@@ -226,6 +280,8 @@ def main():
     m3["worst_slices"] = plot_failures(ds2d, results["Improved U-Net 3D"], positions, "Improved U-Net 3D",
                                        os.path.join(args.out, "failures_improved3d.png"))
     plotted = [n for n in metrics if "largest component" not in n]  # figures show the trained models
+    plot_autopsy_comparison(ds2d, {n: results[n] for n in plotted}, AUTOPSY_CASES,
+                            os.path.join(args.out, "autopsy_comparison.png"))
     plot_examples(ds2d, {n: results[n]["preds"] for n in plotted}, os.path.join(args.out, "examples3d.png"))
     plot_position({n: metrics[n] for n in plotted}, os.path.join(args.out, "position_dice3d.png"))
     plot_size({n: metrics[n]["dice_by_prostate_area"] for n in plotted}, os.path.join(args.out, "size_dice3d.png"))
