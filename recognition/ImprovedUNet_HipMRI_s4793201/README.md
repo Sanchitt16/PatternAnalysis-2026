@@ -227,9 +227,9 @@ AdamW (lr 5×10⁻⁴), 1-epoch warm-up then cosine decay, Dice + cross-entropy,
 
 **Tool:** Claude (Anthropic), through the Claude app, was the only AI tool used. No code-completion tools were used.
 
-**What AI assisted with, stated plainly:** Claude drafted every code file, the data-audit scripts and this README, and proposed the analyses: the repeated seeds, the like-for-like 2D/3D comparison, the 2D-to-3D slice mapping, the downsampling ceiling, the largest-component check, and the ablation, which followed my tutor's feedback.
+**What AI assisted with:** Claude drafted the framework for all code files and helped me complete many of them, it also drafted the audit scripts and this README according to my guidance, and proposed the analyses: the repeated seeds, the like-for-like 2D/3D comparison, the 2D-to-3D slice mapping, the downsampling ceiling, the largest-component check, and the ablation, which followed my tutor's feedback.
 
-**What I did and how it was checked**
+**Zero Ai usage for these:**
 - **I ran all training myself:** six 2D runs on my GPU, three 3D runs and the 15-run ablation on Rangpur, plus the 2D audit, the smoke tests and the final evaluations. Claude ran some analysis steps through the app's link to my laptop and in its own workspace: the 3D audit, the alignment check, figure generation, a CPU re-run of the 3D evaluation, and the largest-component analysis. I reviewed their outputs.
 - **Every number comes from the runs' saved metrics files.** The only exception is the RTX 4060 3D training time, which is extrapolated from measured epoch times and labelled as such.
 - **The pipelines were tested on synthetic data with known answers before real data was used.** Bugs found and fixed: dropout attached to the wrong layer, an overlay that darkened the image, a figure that failed on small glands, a loader that would have crashed on the 144-slice volume, and a Rangpur crash caused by a missing package.
