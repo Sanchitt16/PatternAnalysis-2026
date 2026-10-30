@@ -7,7 +7,7 @@ Segmentation (Section 2.2) · **3D Improved U-Net** on downsampled HipMRI volume
 - **The 3D Improved U-Net reaches prostate Dice 0.872 ± 0.002** (3 seeds), well above the 0.7 target. It ties the best 2D model overall and is the **best and most stable at the gland tips**.
 - **Global Dice hides a failure at the gland tips in every model.** Dice falls from about 0.91 mid-gland to about 0.82 at the base and apex, and to about 0.3 on slices where the prostate is under 50 px.
 - **3D context halves the missed tip slices,** but sometimes runs 1–3 slices past the gland's end.
-- **The 2D Improved U-Net was worse than the plain U-Net because of instance normalisation.** An ablation shows that swapping it for batch norm alone closes the whole gap and also makes the model 40% faster.
+- **Why the 2D Improved U-Net was worse, tested and fixed:** a 15-run ablation (Section 8) switched off its components one at a time and found **instance normalisation** to be the cause. **Swapping it for batch norm fixes it:** the fixed model matches the plain U-Net (0.874 Dice) and runs 40% faster.
 - **Recommendation:** use the 3D model, always review the end slices of the gland, and keep only the largest connected prostate region.
 
 ### Contents
@@ -175,7 +175,15 @@ AdamW (lr 5×10⁻⁴), 1-epoch warm-up then cosine decay, Dice + cross-entropy,
 
 ## 8. Why is the 2D Improved U-Net worse than the plain U-Net? (ablation)
 
-The 2D Improved U-Net scored lower *and* ran slower than the plain U-Net. To find out why, I switched off one suspected cause at a time and retrained each variant with 3 seeds. The original model was also retrained on the same hardware (Rangpur A100) as a **control**.
+**Problem.** The 2D Improved U-Net scored *lower* (0.851 vs 0.873 prostate Dice, 0.784 vs 0.823 at the gland tips) and ran *slower* (5.2 vs 2.3 ms per slice) than the plain U-Net, despite being the more advanced design.
+
+### How we tested it
+- **Three suspects, one at a time.** Each is a design choice the Improved U-Net adds over the plain U-Net: (A) spatial **dropout**, (B) **instance normalisation**, (C) **deep supervision**. Each variant switches off exactly one of them; (D) switches off all three.
+- **Same everything else:** identical data split, loss, optimiser, schedule and epochs; only the switched-off component differs (`modules.py`, `ABLATIONS`; `train.py --model improved_bn` etc.).
+- **3 seeds per variant** so a difference can be told apart from run-to-run noise: 15 training runs in total.
+- **A control:** the unchanged Improved U-Net retrained on the same Rangpur A100s, so hardware cannot explain any difference.
+
+### What we found
 
 | Variant (3 seeds each) | Prostate Dice | Dice at gland tips | Worst patient | Latency per slice (A100) |
 | --- | --- | --- | --- | --- |
@@ -186,11 +194,14 @@ The 2D Improved U-Net scored lower *and* ran slower than the plain U-Net. To fin
 | C: no deep supervision | 0.866 ± 0.007 | 0.805 ± 0.018 | 0.831 | 5.5 ms |
 | D: A + B + C | 0.873 ± 0.007 | 0.823 ± 0.010 | 0.859 | 3.2 ms |
 
-- **Instance normalisation is the cause.** Swapping it for batch norm alone (B) recovers +0.015 overall and **+0.032 at the tips**, matching the plain U-Net and with the smallest spread of any model (± 0.001).
-- **Dropout and deep supervision matter little.** Removing either (A, C) gives a partial gain of about +0.01 that sits within seed noise. Removing all three (D) is no better than B alone.
-- **Why:** instance norm rescales every slice by *that slice's own* statistics, which erases the absolute contrast that separates a tiny prostate tip from its surroundings. Batch norm uses statistics across the batch, so that information survives. In 3D, each normalisation sees a whole volume, which is consistent with the same blocks working well there.
-- **It also explains the speed difference:** instance norm adds per-image work, and batch norm cuts latency from 5.7 to 3.4 ms per slice (both timed on the A100).
-- **The control confirms the hardware made no difference:** 0.859 on the A100 vs 0.851 on the laptop, within noise.
+- **Instance normalisation is the cause.** Swapping it for batch norm (B) alone recovers +0.015 prostate Dice and **+0.032 at the gland tips**, exactly matching the plain U-Net, with the smallest spread of any model (± 0.001).
+- **Dropout and deep supervision are not the cause.** Removing either (A, C) gives only about +0.01, within seed noise, and removing all three (D) is no better than B alone.
+- **Why it happens:** instance norm rescales every slice using *that slice's own* statistics, which erases the absolute contrast separating a tiny prostate tip from its surroundings. Batch norm uses statistics across the batch, so the contrast survives. In 3D each normalisation sees a whole volume, which is consistent with the same blocks working well there.
+- **It also explains the speed gap:** instance norm adds per-image work, and batch norm cuts latency from 5.7 to 3.4 ms per slice (both timed on the A100).
+- **The control rules out hardware:** 0.859 on the A100 vs 0.851 on the laptop, within noise.
+
+### The fix
+**Replace instance normalisation with batch normalisation in the 2D Improved U-Net** (`--model improved_bn`). The fixed model matches the plain U-Net's accuracy (0.874 vs 0.873 overall, 0.821 vs 0.823 at the tips), is the most consistent 2D model, and runs 40% faster than before. The submitted 3D model keeps instance norm, because there it already performs best at the tips.
 
 ## 9. Failure-case autopsy
 
