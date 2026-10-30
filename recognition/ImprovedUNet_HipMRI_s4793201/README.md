@@ -10,6 +10,20 @@ Segmentation (Section 2.2) · **3D Improved U-Net** on downsampled HipMRI volume
 - **The 2D Improved U-Net was worse than the plain U-Net because of instance normalisation.** An ablation shows that swapping it for batch norm alone closes the whole gap and also makes the model 40% faster.
 - **Recommendation:** use the 3D model, always review the end slices of the gland, and keep only the largest connected prostate region.
 
+### Contents
+- [1. Problem and model](#1-problem-and-model)
+- [2. Feasibility review (midpoint check-off)](#2-feasibility-review-midpoint-check-off)
+- [3. Files and usage](#3-files-and-usage)
+- [4. Data and preprocessing](#4-data-and-preprocessing)
+- [5. Training](#5-training)
+- [6. Results (same 540 test slices, mean ± std over 3 seeds)](#6-results-same-540-test-slices-mean--std-over-3-seeds)
+- [7. The dilemma: does global Dice hide boundary failures?](#7-the-dilemma-does-global-dice-hide-boundary-failures)
+- [8. Why is the 2D Improved U-Net worse than the plain U-Net? (ablation)](#8-why-is-the-2d-improved-u-net-worse-than-the-plain-u-net-ablation)
+- [9. Failure-case autopsy](#9-failure-case-autopsy)
+- [10. Recommendation to the project manager](#10-recommendation-to-the-project-manager)
+- [11. Artificial Intelligence Usage Disclosure](#11-artificial-intelligence-usage-disclosure)
+- [References](#references)
+
 ---
 
 ## 1. Problem and model
@@ -81,7 +95,19 @@ python predict3d.py --study-root <study> --ckpt3d runs/improved3d_s42/best.pt [m
 # Rangpur: sbatch --export=ALL,MODEL=improved3d,SEED=42 train_rangpur.slurm
 ```
 
-**Dependencies:** Python 3.13.5, PyTorch 2.14.0 (CUDA 12.6), nibabel 5.4.2, NumPy 2.3.5, Matplotlib 3.11.1, plus SciPy, needed only for the optional largest-component check. Hardware: an RTX 4060 Laptop GPU (8 GB), and Rangpur A100s for the 3D and ablation runs. **Reproducibility:** every model was trained with seeds 42, 1 and 2. Mixed precision makes reruns differ only in the third decimal, and a CPU re-run of the 3D evaluation matched the GPU to within 0.0001.
+### Dependencies
+Python 3.13.5, PyTorch 2.14.0 (CUDA 12.6), nibabel 5.4.2, NumPy 2.3.5, Matplotlib 3.11.1, plus SciPy, needed only for the optional largest-component check. Hardware: an RTX 4060 Laptop GPU (8 GB), and Rangpur A100s for the 3D and ablation runs.
+
+```bash
+pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cu126
+pip install -r requirements.txt
+```
+
+### Reproducibility
+- **Fixed seeds:** `--seed` sets Python, NumPy and PyTorch seeds (`utils.set_seed`). Every model was trained with seeds 42, 1 and 2, and results are reported as mean ± std.
+- **Fixed splits:** the provided patient-level folders are used unchanged; 3D volumes inherit them, so there is no random split to repeat.
+- **Pinned versions:** `requirements.txt`. Every reported number is written to `test_metrics.json` / `comparison3d.json` / `ablation_summary.json` by the scripts, not copied by hand.
+- **Expected variation:** mixed precision and non-deterministic cuDNN kernels make reruns differ only in the third decimal. A CPU re-run of the 3D evaluation matched the GPU to within 0.0001.
 
 ## 4. Data and preprocessing
 
@@ -202,7 +228,7 @@ The 2D Improved U-Net scored lower *and* ran slower than the plain U-Net. To fin
 
 ## References
 
-1. O. Ronneberger, P. Fischer and T. Brox, "U-Net: Convolutional networks for biomedical image segmentation," *MICCAI*, 2015.
-2. F. Isensee et al., "Brain tumor segmentation and radiomics survival prediction: Contribution to the BRATS 2017 challenge," *Brainlesion*, 2018.
-3. Ö. Çiçek et al., "3D U-Net: Learning dense volumetric segmentation from sparse annotation," *MICCAI*, 2016.
-4. COMP3710 Report Specification v2.5, Appendix B, The University of Queensland, 2026.
+1. O. Ronneberger, P. Fischer and T. Brox, "U-Net: Convolutional networks for biomedical image segmentation," *MICCAI*, 2015. [arXiv:1505.04597](https://arxiv.org/abs/1505.04597)
+2. F. Isensee, P. Kickingereder, W. Wick, M. Bendszus and K. H. Maier-Hein, "Brain tumor segmentation and radiomics survival prediction: Contribution to the BRATS 2017 challenge," *Brainlesion*, 2018. [arXiv:1802.10508](https://arxiv.org/abs/1802.10508)
+3. Ö. Çiçek, A. Abdulkadir, S. S. Lienkamp, T. Brox and O. Ronneberger, "3D U-Net: Learning dense volumetric segmentation from sparse annotation," *MICCAI*, 2016. [arXiv:1606.06650](https://arxiv.org/abs/1606.06650)
+4. COMP3710 / COMP7710 Report Specification v2.5, Appendix B (reading Nifti files), The University of Queensland, 2026.
